@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "myfitjournal1",
+    "slug": "snack-fde0738e-3dfc-4262-939a-927ab2daa673",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.allgommes.snackfde0738e3dfc4262939a927ab2daa673"
+    },
+    "web": {}
+  }
+}
