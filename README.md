@@ -176,6 +176,12 @@ users/
 ```
 
 ## 📸 Screenshots
+<img width="1080" height="2400" alt="home" src="https://github.com/user-attachments/assets/971954da-70a7-483e-a6cb-0ad965026ac0" />
+<img width="1080" height="2400" alt="workouts" src="https://github.com/user-attachments/assets/a5ef7699-b9d9-4ceb-b0c1-6f5ba39b9077" />
+<img width="1080" height="2400" alt="nutrition" src="https://github.com/user-attachments/assets/f7a7dc79-38a1-40e8-b718-87357955394e" />
+<img width="1080" height="2400" alt="statistics" src="https://github.com/user-attachments/assets/da9aff81-298f-4725-a586-aeccfee012de" />
+<img width="1080" height="2400" alt="perfil" src="https://github.com/user-attachments/assets/c4722cce-194e-4cbc-9686-b36428cd9136" />
+<img width="1080" height="2400" alt="about" src="https://github.com/user-attachments/assets/fc2a31b3-c109-4ffe-9e51-3904d6e20700" />
 
 *Em breve*
 
