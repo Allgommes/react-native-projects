@@ -1,148 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import SimpleButton from '../../../components/SimpleButton';
-import { db, auth } from '../../config/Firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { AuthContext, db } from '../../config/Firebase';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 
-export default function HomeScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalWorkouts: 0,
-    caloriesBurned: 0,
-    caloriesConsumed: 0
-  });
+export default function NutritionScreen({ navigation, route }) { // Componente principal da tela de nutrição criado com a funçao NutritionScreen
+  const { user } = useContext(AuthContext);
+  const [foods, setFoods] = useState([]);
 
-  useEffect(() => {
-    fetchWeeklyStats();
+  const dateKey = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }, []);
 
-  const fetchWeeklyStats = async () => {
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        setLoading(false);
-        return;
+  useEffect(() => { // useEffect para carregar alimentos do dia atual
+    if (!user) return;
+    const colRef = collection(db, 'users', user.uid, 'days', dateKey, 'consumedFoods');
+    const unsubscribe = onSnapshot(colRef, (snap) => {
+      const items = [];
+      snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+      // Sort newest first by createdAt if present
+      items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setFoods(items);
+      console.log(`📋 ${items.length} alimentos carregados do Firebase`);
+    });
+    return unsubscribe;
+  }, [user, dateKey]);
+
+  useEffect(() => { // useEffect para detectar novos alimentos adicionados
+    const newFood = route?.params?.newFood;
+    if (!user || !newFood) return;
+    console.log('Novo alimento recebido:', newFood);
+    const save = async () => {
+      try {
+        const colRef = collection(db, 'users', user.uid, 'days', dateKey, 'consumedFoods');
+        const foodData = {
+          name: newFood.name,
+          calories: Number(newFood.calories) || 0,
+          protein: Number(newFood.protein) || 0,
+          carbs: Number(newFood.carbs) || 0,
+          fat: Number(newFood.fat) || 0,
+          barcode: newFood.barcode || null,
+          date: dateKey,
+          createdAt: new Date()
+        };
+        console.log('Salvando no Firebase:', foodData);
+        const docRef = await addDoc(colRef, foodData);
+        console.log('Alimento salvo com ID:', docRef.id);
+      } catch (error) {
+        console.error('Erro ao salvar alimento:', error);
+        Alert.alert('Erro', 'Não foi possível salvar o alimento: ' + error.message);
+      } finally {
+        navigation.setParams({ newFood: undefined });
       }
+    };
+    save();
+  }, [route?.params?.newFood, user, dateKey, navigation]);
 
-      const last7Days = getLast7Days();
-      let totalWorkouts = 0;
-      let totalCaloriesBurned = 0;
-      let totalCaloriesConsumed = 0;
-
-      for (const date of last7Days) {
-        // Buscar treinos
-        const workoutsRef = collection(db, 'users', user.uid, 'workouts');
-        const workoutsQuery = query(
-          workoutsRef,
-          where('date', '>=', date.start),
-          where('date', '<=', date.end)
-        );
-        const workoutsSnapshot = await getDocs(workoutsQuery);
-        totalWorkouts += workoutsSnapshot.size;
-
-        // Somar calorias gastas nos treinos
-        workoutsSnapshot.forEach((doc) => {
-          totalCaloriesBurned += doc.data().calories || 0;
-        });
-
-        // Buscar alimentos consumidos
-        const foodsRef = collection(db, 'users', user.uid, 'days', date.key, 'consumedFoods');
-        const foodsSnapshot = await getDocs(foodsRef);
-        
-        foodsSnapshot.forEach((doc) => {
-          totalCaloriesConsumed += doc.data().calories || 0;
-        });
-      }
-
-      setStats({
-        totalWorkouts,
-        caloriesBurned: totalCaloriesBurned,
-        caloriesConsumed: totalCaloriesConsumed
-      });
-
-      console.log('📊 Stats carregadas:', { totalWorkouts, totalCaloriesBurned, totalCaloriesConsumed });
-    } catch (error) {
-      console.error('❌ Erro ao buscar estatísticas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getLast7Days = () => {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateKey = date.toISOString().split('T')[0];
-
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
-
-      days.push({
-        key: dateKey,
-        start: start.toISOString(),
-        end: end.toISOString()
-      });
-    }
-    return days;
-  };
-
-  const tips = [
-    'Mantenha-se hidratado durante os treinos!',
-    'Durma pelo menos 7-8 horas por noite.',
-    'Consuma proteínas após o treino.',
-    'Faça alongamentos antes e depois do exercício.',
-    'Estabeleça metas realistas e celebre conquistas!'
-  ];
-
-  const randomTip = tips[Math.floor(Math.random() * tips.length)];
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
+  const totals = useMemo(() => { // useMemo para calcular totais nutricionais
+    return foods.reduce(
+      (acc, f) => {
+        acc.calories += Number(f.calories) || 0;
+        acc.protein += Number(f.protein) || 0;
+        acc.carbs += Number(f.carbs) || 0;
+        acc.fat += Number(f.fat) || 0;
+        return acc;
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
-  }
+  }, [foods]);
 
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Bem-vindo ao MyFit Journal</Text>
-
-      <View style={styles.logoContainer}>
-        <Image source={require('../../../assets/logoCool.png')} style={styles.logo} />
-      </View>
+  return ( // return renderazição da tela
+    <View style={styles.container}>
+      <Text style={styles.title}>Nutrição</Text>
       
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>📊 Resumo da Semana</Text>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Treinos:</Text>
-          <Text style={styles.statValue}>{stats.totalWorkouts}</Text>
-        </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Calorias gastas:</Text>
-          <Text style={styles.statValue}>{stats.caloriesBurned} kcal</Text>
-        </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Calorias consumidas:</Text>
-          <Text style={styles.statValue}>{stats.caloriesConsumed} kcal</Text>
-        </View>
+      <SimpleButton title="Registar Alimento" onPress={() => navigation.navigate('AddFood')} />
+      <SimpleButton title="Ler Código de Barras" onPress={() => navigation.navigate('BarcodeScanner')} type="secondary" />
+
+      <View style={styles.summary}>
+        <Text style={styles.subtitle}>Resumo Diário</Text>
+        <Text>Total Calorias: {totals.calories.toFixed(0)} kcal</Text>
+        <Text>Proteínas: {totals.protein.toFixed(1)} g</Text>
+        <Text>Carboidratos: {totals.carbs.toFixed(1)} g</Text>
+        <Text>Gorduras: {totals.fat.toFixed(1)} g</Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>💡 Dica do Dia</Text>
-        <Text style={styles.tipText}>{randomTip}</Text>
-      </View>
-
-      <SimpleButton 
-        title="Ver Estatísticas" 
-        onPress={() => navigation.navigate('Statistics')}
+      <Text style={styles.subtitle}>Alimentos Consumidos Durante o Dia</Text>
+      
+      <FlatList
+        data={foods}
+        keyExtractor={item => String(item.id)}
+        renderItem={({ item }) => (
+          <View style={styles.foodCard}>
+            <Text style={styles.foodName}>{item.name}</Text>
+            <Text>Calorias: {item.calories} kcal</Text>
+            <Text>Proteínas: {item.protein}g</Text>
+            <Text>Carboidratos: {item.carbs}g</Text>
+            <Text>Gorduras: {item.fat}g</Text>
+          </View>
+        )}
       />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -152,65 +113,38 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5'
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5'
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666'
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginVertical: 20
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    resizeMode: 'contain'
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center'
+    marginBottom: 20
   },
-  card: {
+  subtitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10
+  },
+  summary: {
     backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#eee'
+  },
+  foodCard: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3
   },
-  cardTitle: {
+  foodName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8
-  },
-  statLabel: {
-    fontSize: 16,
-    color: '#666'
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007AFF'
-  },
-  tipText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 22
+    fontWeight: 'bold'
   }
 });

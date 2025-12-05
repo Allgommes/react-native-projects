@@ -6,7 +6,17 @@ import SimpleButton from '../../../components/SimpleButton';
 import { db, auth } from '../../config/Firebase';
 import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 
-
+/**
+ * AddWorkoutScreen component for adding or editing a workout entry.
+ * 
+ * This screen allows users to input workout details such as name, type, duration, calories, date, and notes.
+ * It supports both creating a new workout and editing an existing one based on the route params.
+ * 
+ * @param {Object} props - The props object.
+ * @param {Object} props.navigation - Navigation object from React Navigation for navigating back after saving.
+ * @param {Object} props.route - Route object containing parameters.
+ * @param {Object} [props.route.params.workout] - The workout object to edit, if in edit mode.
+ */
 export default function AddWorkoutScreen({ navigation, route }) {
     const editWorkout = route?.params?.workout;
     const isEditing = !!editWorkout;

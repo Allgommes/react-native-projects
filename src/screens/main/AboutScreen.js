@@ -1,31 +1,3 @@
-/*import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-
-export default function AboutScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={[styles.title]}>SOBRE</Text>
-      <Text>MyFit Journal</Text>
-      <Text>Desenvolvido para ajudar a acompanhar treinos e nutrição.</Text>
-      // <Image source={require('../../../assets/logo.png')} style={{ width: 300, height: 300, marginTop: 100, alignSelf: 'center' }} />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f2f2ff'
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  }
-});
-*/
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
 

@@ -12,7 +12,7 @@ export default function HomeScreen({ navigation }) {
     caloriesConsumed: 0
   });
 
-  useEffect(() => {
+  useEffect(() => { // useEffect para buscar estatísticas ao montar o componente neste caso o componente HomeScreen
     fetchWeeklyStats();
   }, []);
 
@@ -41,15 +41,15 @@ export default function HomeScreen({ navigation }) {
         totalWorkouts += workoutsSnapshot.size;
 
         // Somar calorias gastas nos treinos
-        workoutsSnapshot.forEach((doc) => {
-          totalCaloriesBurned += doc.data().calories || 0;
+        workoutsSnapshot.forEach((doc) => { // forEach para iterar sobre cada documento retornado na consulta
+          totalCaloriesBurned += doc.data().calories || 0; // doc.data() representa cada treino
         });
 
         // Buscar alimentos consumidos
-        const foodsRef = collection(db, 'users', user.uid, 'days', date.key, 'consumedFoods');
+        const foodsRef = collection(db, 'users', user.uid, 'days', date.key, 'consumedFoods');  // cria a referência à coleção de alimentos consumidos para o dia específico
         const foodsSnapshot = await getDocs(foodsRef);
         
-        foodsSnapshot.forEach((doc) => {
+        foodsSnapshot.forEach((doc) => { // foodSnapshot representa os alimentos consumidos naquele dia
           totalCaloriesConsumed += doc.data().calories || 0;
         });
       }
@@ -60,9 +60,9 @@ export default function HomeScreen({ navigation }) {
         caloriesConsumed: totalCaloriesConsumed
       });
 
-      console.log('📊 Stats carregadas:', { totalWorkouts, totalCaloriesBurned, totalCaloriesConsumed });
+      console.log('Stats carregadas:', { totalWorkouts, totalCaloriesBurned, totalCaloriesConsumed });
     } catch (error) {
-      console.error('❌ Erro ao buscar estatísticas:', error);
+      console.error('Erro ao buscar estatísticas:', error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}> // ScrollView para permitir rolagem na tela inicial
       <Text style={styles.title}>Bem-vindo ao MyFit Journal</Text>
 
       <View style={styles.logoContainer}>
@@ -118,7 +118,7 @@ export default function HomeScreen({ navigation }) {
       </View>
       
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>📊 Resumo da Semana</Text>
+        <Text style={styles.cardTitle}>Resumo da Semana</Text>
         <View style={styles.statRow}>
           <Text style={styles.statLabel}>Treinos:</Text>
           <Text style={styles.statValue}>{stats.totalWorkouts}</Text>
@@ -134,7 +134,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>💡 Dica do Dia</Text>
+        <Text style={styles.cardTitle}>Dica do Dia</Text>
         <Text style={styles.tipText}>{randomTip}</Text>
       </View>
 

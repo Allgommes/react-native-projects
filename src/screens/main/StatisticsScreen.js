@@ -4,6 +4,9 @@ import { LineChart, BarChart } from 'react-native-chart-kit';
 import { db, auth } from '../../config/Firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
+// StatisticsScreen.js
+// This screen displays user statistics for workouts and calories over the last 7 days.
+// It fetches data from Firebase and renders charts using react-native-chart-kit.
 const screenWidth = Dimensions.get('window').width;
 
 export default function StatisticsScreen() {

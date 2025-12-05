@@ -2,7 +2,24 @@ import React, { useState } from 'react';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
- 
+/**
+ * BarcodeScannerScreen component for scanning barcodes and fetching product data from Open Food Facts API.
+ * 
+ * This screen uses the device's camera to scan barcodes. Upon successful scan, it attempts to fetch
+ * product information from the Open Food Facts API. If the product is found, it navigates to the AddFood
+ * screen with prefilled data. If not found, it offers to manually register the product.
+ * 
+ * Features:
+ * - Requests camera permissions if not granted.
+ * - Prevents multiple scans by setting a scanned state.
+ * - Handles API errors and provides user feedback via alerts.
+ * - Allows rescanning after processing.
+ * 
+ * @component
+ * @example
+ * // Usage in navigation
+ * <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
+ */
 export default function BarcodeScannerScreen() {
   // Estado para armazenar o dado do código lido e evitar múltiplas leituras
   const [scanned, setScanned] = useState(false);
